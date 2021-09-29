@@ -12,7 +12,7 @@ const BookModel = require('./moduls/BookDataBase');
 
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/Books');
+mongoose.connect(`${process.env.MONGO_SERVER_LINK}`);
 
 // const bookSchema = new mongoose.Schema({
 //     title: String,
@@ -48,7 +48,7 @@ function seedBook(){
     Darkmans.save();
 }
 
-seedBook();
+// seedBook();
 
 server.get('/books', booksHandler);
 server.post('/addBook', addBooks);
