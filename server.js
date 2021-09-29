@@ -5,20 +5,23 @@ require('dotenv').config();
 
 const server = express();
 server.use(cors());
+server.use(express.json());
 const PORT = process.env.PORT;
+
+const BookModel = require('./moduls/BookDataBase');
 
 const mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost:27017/Books');
 
-const bookSchema = new mongoose.Schema({
-    title: String,
-    description: String,
-    status: String,
-    email: String
-});
+// const bookSchema = new mongoose.Schema({
+//     title: String,
+//     description: String,
+//     status: String,
+//     email: String
+// });
 
-const BookModel = mongoose.model('Book', bookSchema);
+// const BookModel = mongoose.model('Book', bookSchema);
 
 function seedBook(){
     const BrokenGlass = new BookModel({
@@ -45,22 +48,57 @@ function seedBook(){
     Darkmans.save();
 }
 
-// seedBook();
+seedBook();
 
 server.get('/books', booksHandler);
+server.post('/addBook', addBooks);
+server.delete('/deleteBooks', deleteBooks);
 
 // localhost:3001/books?email=1998lebzo@gmail.com
 
 function booksHandler(req,res){
     let email1 = req.query.email;
-    BookModel.find({email:email1},(error,bookData)=>{
+    BookModel.find({email:email1}, function(error, bookData){
         if (error){
-            console.log(error);
+            console.log('error with the data', error);
         }else{
             res.send(bookData);
         }
-    })
+    }
+    )
 }
+
+async function addBooks(req,res){
+    let { title,description,status,email} = req.body;
+    await BookModel.create({
+        title: title,
+        description: description,
+        status: status,
+        email: email
+    });
+    await BookModel.find({email:email}, function(error, bookData){
+        if (error){
+            console.log('error with the data', error);
+        }else{
+            res.send(bookData);
+        }
+    }
+    )}
+
+    function deleteBooks(req, res){
+        let bookID = req.query.bookID;
+        let userEmail = req.query.email;
+        BookModel.deleteOne({_id: bookID}).then(() => {
+            BookModel.find({email:userEmail}, function(error, bookData){
+                if (error){
+                    console.log('error with the data', error);
+                }else{
+                    res.send(bookData);
+                }
+            }
+            )
+        })
+    }
 
 server.get('/',homeHandler);
 
