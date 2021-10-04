@@ -23,7 +23,7 @@ mongoose.connect(`${process.env.MONGO_SERVER_LINK}`);
 
 // const BookModel = mongoose.model('Book', bookSchema);
 
-function seedBook(){
+function seedBook() {
     const BrokenGlass = new BookModel({
         title: 'Broken Glass',
         description: 'Broken Glass – a black comedy told by a disgraced teacher without much in the way of full stops or paragraph breaks.',
@@ -53,59 +53,76 @@ function seedBook(){
 server.get('/books', booksHandler);
 server.post('/addBook', addBooks);
 server.delete('/deleteBooks', deleteBooks);
+server.put('/update', updateBooks);
 
 // localhost:3001/books?email=1998lebzo@gmail.com
 
-function booksHandler(req,res){
+function booksHandler(req, res) {
     let email1 = req.query.email;
-    BookModel.find({email:email1}, function(error, bookData){
-        if (error){
+    BookModel.find({ email: email1 }, function (error, bookData) {
+        if (error) {
             console.log('error with the data', error);
-        }else{
+        } else {
             res.send(bookData);
         }
     }
     )
 }
 
-async function addBooks(req,res){
-    let { title,description,status,email} = req.body;
+async function addBooks(req, res) {
+    let { title, description, status, email } = req.body;
     await BookModel.create({
         title: title,
         description: description,
         status: status,
         email: email
     });
-    await BookModel.find({email:email}, function(error, bookData){
-        if (error){
+    await BookModel.find({ email: email }, function (error, bookData) {
+        if (error) {
             console.log('error with the data', error);
-        }else{
+        } else {
             res.send(bookData);
         }
     }
-    )}
+    )
+}
 
-    function deleteBooks(req, res){
-        let bookID = req.query.bookID;
-        let userEmail = req.query.email;
-        BookModel.deleteOne({_id: bookID}).then(() => {
-            BookModel.find({email:userEmail}, function(error, bookData){
-                if (error){
-                    console.log('error with the data', error);
-                }else{
-                    res.send(bookData);
-                }
+function deleteBooks(req, res) {
+    let bookID = req.query.bookID;
+    let userEmail = req.query.email;
+    BookModel.deleteOne({ _id: bookID }).then(() => {
+        BookModel.find({ email: userEmail }, function (error, bookData) {
+            if (error) {
+                console.log('error with the data', error);
+            } else {
+                res.send(bookData);
             }
-            )
-        })
-    }
+        }
+        )
+    })
+}
 
-server.get('/',homeHandler);
+function updateBooks(req, res) {
+    let { title, description, status, id, email } = req.body;
 
-function homeHandler(req,res){
+    BookModel.findByIdAndUpdate(id, { title, description, status }, (error, finalData) => {
+        if(error){
+            console.log('error with the data!');
+        }else{
+            BookModel.find({email:email}, function(error,bookData){
+                if(error){console.log('error with getting the data', error);}
+                else {res.send(bookData)}
+            })
+        }
+    })
+}
+
+server.get('/', homeHandler);
+
+function homeHandler(req, res) {
     res.send('Everything is working!')
 }
 
-server.listen(PORT,()=>{
+server.listen(PORT, () => {
     console.log(`HI msg reaches ${PORT}`);
 })
